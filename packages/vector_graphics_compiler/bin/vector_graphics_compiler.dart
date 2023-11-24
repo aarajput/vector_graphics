@@ -97,7 +97,13 @@ final ArgParser argParser = ArgParser()
   ..addFlag('use-half-precision-control-points',
       help:
           'Convert path control points into  IEEE 754-2008 half precision floating point values.\n'
-          'This reduces file size at the cost of lost precision at larger values.');
+          'This reduces file size at the cost of lost precision at larger values.')
+  ..addOption(
+    'keep-input-extension',
+    abbr: 'e',
+    help: 'If you want to use input file name extension in output file name',
+    defaultsTo: 'true',
+  );
 
 void validateOptions(ArgResults results) {
   if (results.wasParsed('input-dir') &&
@@ -140,6 +146,8 @@ Future<void> main(List<String> args) async {
 
   final List<Pair> pairs = <Pair>[];
   if (results.wasParsed('input-dir')) {
+    final bool keepInputExtension = results['keep-input-extension'] == true;
+    print('keepInputExtension: ${results['keep-input-extension']}');
     final Directory directory = Directory(results['input-dir'] as String);
     if (!directory.existsSync()) {
       print('input-dir ${directory.path} does not exist.');
@@ -150,9 +158,13 @@ Future<void> main(List<String> args) async {
       if (!file.path.endsWith('.svg')) {
         continue;
       }
-
-      String outputPath = '${file.path}.vec';
-
+      final String outputPath;
+      final String outputFileName;
+      if (keepInputExtension) {
+        outputFileName = '${p.basename(file.path)}.vec';
+      } else {
+        outputFileName = '${p.basenameWithoutExtension(file.path)}.vec';
+      }
       // to specfic the output directory when parse multi svg
       if (results.wasParsed('out-dir')) {
         final Directory outDir = Directory(results['out-dir'] as String);
@@ -160,7 +172,9 @@ Future<void> main(List<String> args) async {
         if (!outDir.existsSync()) {
           outDir.createSync();
         }
-        outputPath = p.join(outDir.path, '${p.basename(file.path)}.vec');
+        outputPath = p.join(outDir.path, outputFileName);
+      } else {
+        outputPath = p.join(file.parent.path, outputFileName);
       }
 
       pairs.add(Pair(file.path, outputPath));
