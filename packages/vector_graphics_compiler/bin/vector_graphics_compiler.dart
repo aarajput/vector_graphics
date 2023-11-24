@@ -147,7 +147,6 @@ Future<void> main(List<String> args) async {
   final List<Pair> pairs = <Pair>[];
   if (results.wasParsed('input-dir')) {
     final bool keepInputExtension = results['keep-input-extension'] == true;
-    print('keepInputExtension: ${results['keep-input-extension']}');
     final Directory directory = Directory(results['input-dir'] as String);
     if (!directory.existsSync()) {
       print('input-dir ${directory.path} does not exist.');
