@@ -408,6 +408,23 @@ void main() {
 
     expect(data.dispose, returnsNormally);
   });
+
+  test('Color filter applies clip', () async {
+    final RenderPictureVectorGraphic render = RenderPictureVectorGraphic(
+      pictureInfo,
+      const ui.ColorFilter.mode(Colors.green, ui.BlendMode.difference),
+      null,
+    );
+    render.layout(BoxConstraints.tight(const Size(50, 50)));
+    final FakePaintingContext context = FakePaintingContext();
+    render.paint(context, Offset.zero);
+
+    expect(context.canvas.lastClipRect,
+        equals(const ui.Rect.fromLTRB(0, 0, 50, 50)));
+    expect(context.canvas.saveCount, 0);
+    expect(context.canvas.totalSaves, 1);
+    expect(context.canvas.totalSaveLayers, 1);
+  });
 }
 
 class FakeCanvas extends Fake implements Canvas {
@@ -415,6 +432,10 @@ class FakeCanvas extends Fake implements Canvas {
   Rect? lastSrc;
   Rect? lastDst;
   Paint? lastPaint;
+  Rect? lastClipRect;
+  int saveCount = 0;
+  int totalSaves = 0;
+  int totalSaveLayers = 0;
 
   @override
   void drawImageRect(ui.Image image, Rect src, Rect dst, Paint paint) {
@@ -422,6 +443,42 @@ class FakeCanvas extends Fake implements Canvas {
     lastSrc = src;
     lastDst = dst;
     lastPaint = paint;
+  }
+
+  @override
+  void drawPicture(ui.Picture picture) {}
+
+  @override
+  int getSaveCount() {
+    return saveCount;
+  }
+
+  @override
+  void restoreToCount(int count) {
+    saveCount = count;
+  }
+
+  @override
+  void saveLayer(Rect? bounds, Paint paint) {
+    saveCount++;
+    totalSaveLayers++;
+  }
+
+  @override
+  void save() {
+    saveCount++;
+    totalSaves++;
+  }
+
+  @override
+  void restore() {
+    saveCount--;
+  }
+
+  @override
+  void clipRect(ui.Rect rect,
+      {ui.ClipOp clipOp = ui.ClipOp.intersect, bool doAntiAlias = true}) {
+    lastClipRect = rect;
   }
 }
 
