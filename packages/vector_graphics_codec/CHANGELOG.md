@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 1.1.11+
+
+- Relax package:http constraint.
+
+## 1.1.11
+
+- Use package:http to drop dependency on dart:html.
+
 ## 1.1.10+1
 
 - Add missing save before clip.
